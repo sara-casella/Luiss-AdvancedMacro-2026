@@ -61,6 +61,12 @@ def discretize_assets_exponential(amax, n_a, amin=0):
 
 # %%--------------------------- Functions for value function iteration ------------
 
+def utility_function(c, eis):
+    if eis == 1:
+        u = np.log(c)
+    else:
+        u = c ** (1 - 1/eis) / (1 - 1/eis)
+    return u
 
 def vfi_finite(a_grid, y_profile, r, beta, eis):
         
@@ -97,7 +103,8 @@ def vfi_finite(a_grid, y_profile, r, beta, eis):
     c[-1, c[-1,:]<0] = 0 # Consumption cannot be negative
 
     # Value in the final period
-    V[-1, :] = c[-1, :] ** (1 - eis) / (1 - eis)
+    V[-1, :] = c[-1, :] ** (1 - 1/eis) / (1 - 1/eis)
+    #V[-1,:] = utility_function(c[-1, :])
 
     for tau in range(T-2, -1, -1):  # Loop from period T-1 to 0
         
@@ -115,7 +122,7 @@ def vfi_finite(a_grid, y_profile, r, beta, eis):
                 if c_candidate <= 0:
                     V_candidate[j] = -np.inf  # Set Value to a very low number
                 else:
-                    V_candidate[j] = c_candidate ** (1 - eis) / (1 - eis) + beta * V[tau+1, j]
+                    V_candidate[j] = c_candidate ** (1 - 1/eis) / (1 - 1/eis) + beta * V[tau+1, j]
                 
             # Step 2: Find optimal choice 
             optimal_index = np.argmax(V_candidate)
@@ -127,58 +134,4 @@ def vfi_finite(a_grid, y_profile, r, beta, eis):
 
     return a_prime, c, V
 
-def vfi_finite_egm(a_grid, y_profile, r, beta, eis):
-        
-    '''Value function iteration using brute force maximization over the asset grid.
-    
-    Input(s)
-    ----------
-    a_grid: array(n_a), assets grid
-    y_profile: array(T), income profile
-    r:      float, interest rate
-    beta:   float, discount factor
-    eis:    float, elasticity of intertemporal substitution
-   
-    tol:   [optional] float, tolerance
-    maxit: [optional] integer, maximum number of iterations
-
-    Output(s)
-    ----------
-    a_prime: array(T x n_a), asset policy function
-    c:       array(T x n_a), consumption policy function
-    
-    '''
-    
-    T = len(y_profile)
-
-    # Initialize policy functions
-    c = np.zeros((T, len(a_grid)))  # Consumption policy
-    a_prime = np.zeros((T, len(a_grid)))  # Savings policy
-
-    # Final period: consume all resources
-    a_prime[-1, :] = 0  # No savings nor borrowing in the last period
-    c[-1, :] = y_profile[-1] + (1 + r) * a_grid  # Consumption in the final period
-    c[-1, c[-1,:]<0] = 0 # Consumption cannot be negative
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
-    for tau in range(T-2, -1, -1):  # Loop from period T-1 to 0
-
-        # Step 1: Forming Expectations
-        c_prime = c[tau+1, :]  # Consumption policy in the next period
-        Va = beta*(1 + r) * c_prime ** (-1 / eis)
-        
-        # Step 2: Finding endogenous consumption and resources
-        c_endo =  Va ** (-eis)  # FOC
-        m_endo = c_endo + a_grid - y_profile[tau]  # endogenous resources
-        
-        # breakpoint()
-        
-        # Step 3: Evaluating in our grids
-        a_prime[tau, :] = np.interp((1+r)*a_grid, m_endo, a_grid)  # Current savings
-       
-        # Step 4: constraints (a>amin, c>0)
-        a_prime[tau, :] = np.maximum(a_prime[tau, :], a_grid[0])
-        c[tau, :] = y_profile[tau] + (1 + r) * a_grid - a_prime[tau, :]
-        c[tau, c[tau,:]<0] = 0 # Consumption cannot be negative
-        
-    return a_prime, c
   
