@@ -6,7 +6,7 @@ Created on Wed Apr 8 14:22:03 2026
 @author: sara
 """
 
-# %%       
+# %%  Import libraries     
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,14 +34,6 @@ n_a = 100
 y_profile = np.loadtxt("incprofile.txt")
 y_profile = np.concatenate((y_profile, theta * np.ones(T - len(y_profile)) * y_profile[-1]))
 
-# %% Compare asset grids
-
-# a_grid_uniform = utils.discretize_assets_uniform(100, 50)
-# a_grid_exponential = utils.discretize_assets_exponential(100, 50)
-
-# plt.scatter(a_grid_uniform,a_grid_uniform)
-# plt.scatter(a_grid_exponential,a_grid_uniform)
-# plt.show()
 
 # %%  Model solution
 a_grid_constrained = utils.discretize_assets_uniform(amax, n_a, 0)
@@ -72,4 +64,11 @@ plt.grid()
 plt.show()
 
 
-# %%
+# %% Compare asset grids
+
+# a_grid_uniform = utils.discretize_assets_uniform(100, 50)
+# a_grid_exponential = utils.discretize_assets_exponential(100, 50)
+
+# plt.scatter(a_grid_uniform,a_grid_uniform)
+# plt.scatter(a_grid_exponential,a_grid_uniform)
+# plt.show()
